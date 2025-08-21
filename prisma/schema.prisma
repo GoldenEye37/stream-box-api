@@ -1,0 +1,211 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "metrics"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                       String          @id @default(cuid())
+  firstName                String          @map("first_name") @db.VarChar(100)
+  lastName                 String          @map("last_name") @db.VarChar(100)
+  email                    String          @unique @db.VarChar(255)
+  phoneNumber              String?         @map("phone_number") @db.VarChar(20)
+  age                      Int?            @db.SmallInt
+  passwordHash             String?         @map("password_hash")
+  oauthProvider            String?         @map("oauth_provider") @db.VarChar(50)
+  oauthId                  String?         @map("oauth_id")
+  emailVerified            Boolean         @default(false) @map("email_verified")
+  status                   UserStatus      @default(ACTIVE)
+  defaultPaymentMethodId   String?         @map("default_payment_method_id")
+  preferredGenres          Json?           @map("preferred_genres")
+  createdAt                DateTime        @default(now()) @map("created_at")
+  updatedAt                DateTime        @updatedAt @map("updated_at")
+
+  // Relations
+  rentals                  Rental[]
+  paymentMethods           PaymentMethod[]
+  reviews                  Review[]
+  sharedMovies             MovieShare[]    @relation("SharedBy")
+  receivedShares           MovieShare[]    @relation("SharedWith")
+
+  @@unique([oauthProvider, oauthId])
+  @@map("users")
+}
+
+model Genre {
+  id        String   @id @default(cuid())
+  name      String   @unique @db.VarChar(100)
+  slug      String   @unique @db.VarChar(100)
+  createdAt DateTime @default(now()) @map("created_at")
+  active    Boolean  @default(false) 
+
+  // Relations
+  movies    MovieGenre[]
+
+  @@map("genres")
+}
+
+model Movie {
+  id                String       @id @default(cuid())
+  title             String       @db.VarChar(255)
+  description       String?      @db.Text
+  posterUrl         String?      @map("poster_url") @db.VarChar(500)
+  releaseYear       Int?         @map("release_year") @db.SmallInt
+  durationMinutes   Int?         @map("duration_minutes") @db.SmallInt
+  rating            Decimal?     @db.Decimal(2, 1)
+  rentalPricePerDay Decimal      @map("rental_price_per_day") @db.Decimal(10, 2)
+  status            MovieStatus  @default(ACTIVE)
+  createdAt         DateTime     @default(now()) @map("created_at")
+  updatedAt         DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  genres            MovieGenre[]
+  rentals           Rental[]
+  reviews           Review[]
+
+  @@index([title])
+  @@index([releaseYear])
+  @@index([status])
+  @@index([rating(sort: Desc)])
+  @@map("movies")
+}
+
+model MovieGenre {
+  movieId String @map("movie_id")
+  genreId String @map("genre_id")
+
+  movie   Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  genre   Genre @relation(fields: [genreId], references: [id], onDelete: Cascade)
+
+  @@id([movieId, genreId])
+  @@map("movie_genres")
+}
+
+model PaymentMethod {
+  id           String               @id @default(cuid())
+  userId       String               @map("user_id")
+  type         PaymentMethodType
+  lastFour     String?              @map("last_four") @db.VarChar(4)
+  expiryMonth  Int?                 @map("expiry_month") @db.SmallInt
+  expiryYear   Int?                 @map("expiry_year") @db.SmallInt
+  isDefault    Boolean              @default(false) @map("is_default")
+  gatewayToken String?              @map("gateway_token")
+  createdAt    DateTime             @default(now()) @map("created_at")
+
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rentals      Rental[]
+
+  @@map("payment_methods")
+}
+
+model Rental {
+  id              String        @id @default(cuid())
+  userId          String        @map("user_id")
+  movieId         String        @map("movie_id")
+  rentalStart     DateTime      @default(now()) @map("rental_start")
+  rentalEnd       DateTime      @map("rental_end")
+  status          RentalStatus  @default(ACTIVE)
+  totalAmount     Decimal       @map("total_amount") @db.Decimal(10, 2)
+  paymentMethodId String        @map("payment_method_id")
+  paymentStatus   String        @default("completed") @map("payment_status")
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie           Movie         @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  paymentMethod   PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+  shares          MovieShare[]
+
+  @@unique([userId, movieId, status], name: "unique_active_rental")
+  @@index([userId, status])
+  @@index([movieId, status])
+  @@index([rentalEnd])
+  @@index([createdAt(sort: Desc)])
+  @@map("rentals")
+}
+
+model MovieShare {
+  id               String           @id @default(cuid())
+  rentalId         String           @map("rental_id")
+  sharedByUserId   String           @map("shared_by_user_id")
+  sharedWithEmail  String           @map("shared_with_email")
+  sharedWithUserId String?          @map("shared_with_user_id")
+  shareToken       String           @unique @map("share_token")
+  status           MovieShareStatus @default(ACTIVE)
+  createdAt        DateTime         @default(now()) @map("created_at")
+
+  rental           Rental           @relation(fields: [rentalId], references: [id], onDelete: Cascade)
+  sharedBy         User             @relation("SharedBy", fields: [sharedByUserId], references: [id], onDelete: Cascade)
+  sharedWith       User?            @relation("SharedWith", fields: [sharedWithUserId], references: [id], onDelete: SetNull)
+
+  @@map("movie_shares")
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  movieId    String   @map("movie_id")
+  rating     Int      @db.SmallInt
+  reviewText String?  @map("review_text") @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie      Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, movieId])
+  @@index([movieId])
+  @@map("reviews")
+}
+
+model AdminUser {
+  id           String    @id @default(cuid())
+  username     String    @unique @db.VarChar(100)
+  email        String    @unique @db.VarChar(255)
+  passwordHash String    @map("password_hash")
+  role         String    @default("admin") @db.VarChar(50)
+  status       String    @default("active") @db.VarChar(20)
+  lastLogin    DateTime? @map("last_login")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  @@map("admin_users")
+}
+
+// Enums
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+  DELETED
+}
+
+enum MovieStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum PaymentMethodType {
+  VISA
+  MASTERCARD
+  PAYPAL
+}
+
+enum RentalStatus {
+  ACTIVE
+  EXPIRED
+  RETURNED
+}
+
+enum MovieShareStatus {
+  ACTIVE
+  REVOKED
+  EXPIRED
+}
