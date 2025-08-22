@@ -12,6 +12,21 @@ class JWTHandler{
 
         // TODO: ADD Validate secrets method here 
     }
+    
+    validateSecrets () {
+        if (!this.accessTokenSecret) {
+            throw new Error('JWT_SECRET environment variable is required');
+        }
+        if (!this.refreshTokenSecret) {
+            throw new Error('JWT_REFRESH_SECRET environment variable is required');
+        }
+        if (this.accessTokenSecret.length < 32) {
+            throw new Error('JWT_SECRET must be at least 32 characters long');
+        }
+        if (this.refreshTokenSecret.length < 32) {
+            throw new Error('JWT_REFRESH_SECRET must be at least 32 characters long');
+        }
+    }
 
     // Generate access token 
     generateAccessToken (payload) {
@@ -117,6 +132,25 @@ class JWTHandler{
                 expired: error.name === 'TokenExpiredError', 
                 error: error.message
             };
+        }
+    }
+
+    extractTokenFromHeader(authHeader) {
+        try {
+            if (!authHeader) {
+                return null;
+            }
+
+            const [authType, token] = authHeader.split(' ');
+
+            if (authType !== 'Bearer' || !token) {
+                return null;
+            }
+            
+            return token;
+
+        } catch (error) {
+            return null;
         }
     }
 }
