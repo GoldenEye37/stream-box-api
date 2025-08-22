@@ -1,14 +1,22 @@
 {
   "dependencies": {
     "@prisma/client": "^6.14.0",
+    "bcryptjs": "^3.0.2",
     "config": "^4.1.1",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
+    "helmet": "^8.1.0",
     "joi": "^18.0.1",
+    "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
+    "morgan": "^1.10.1",
     "redis": "^5.8.2"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
     "nodemon": "^3.1.10",
     "prisma": "^6.14.0"
   },
