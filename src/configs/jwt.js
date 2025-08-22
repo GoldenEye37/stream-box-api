@@ -146,7 +146,7 @@ class JWTHandler{
             if (authType !== 'Bearer' || !token) {
                 return null;
             }
-            
+
             return token;
 
         } catch (error) {
@@ -154,3 +154,5 @@ class JWTHandler{
         }
     }
 }
+
+module.exports = new JWTHandler();
