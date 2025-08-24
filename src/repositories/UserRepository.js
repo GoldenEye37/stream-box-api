@@ -13,7 +13,7 @@ class UserRepository extends BaseRepository {
             const user = await tx.user.create({
                 data: {
                     ...userData,
-                    preferences: preferences.length > 0 ? preferences : null,
+                    preferredGenres: preferences.length > 0 ? preferences : null,
                 },
             });
             return user;

@@ -10,6 +10,8 @@ class AuthService {
 
     // Register a new user
     async register(userData) {
+        console.log('Registering user with data:', userData);
+        
         const {
             email, 
             password, 

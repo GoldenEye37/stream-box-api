@@ -5,7 +5,19 @@ const Joi = require('joi');
  *                                         JOI Schemas
  * *************************************************************************************
  */
-
+/**
+ * Example user registration JSON:
+ * {
+ *   "email": "john.doe@example.com",
+ *   "password": "StrongP@ssw0rd!",
+ *   "passwordConfirmation": "StrongP@ssw0rd!",
+ *   "firstName": "John",
+ *   "lastName": "Doe",
+ *   "phoneNumber": "+12345678901",
+ *   "age": 25,
+ *   "preferredGenres": ["Action", "Comedy"]
+ * }
+ */
 const userRegistrationSchema = Joi.object({
     email: Joi.string()
     .email({ minDomainSegments: 2 })

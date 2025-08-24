@@ -4,6 +4,10 @@ const AuthController = require('../controllers/AuthController');
 
 const router = express.Router();
 
+router.get('/', (req, res) => {
+    res.status(200).json({ message: 'Stream Box Auth Service' });
+});
+
 /**
  *  @route   POST /api/v1/auth/register
  *  @desc   Register a new user
