@@ -1,4 +1,11 @@
 const AuthService = require('../services/AuthService');
+const {
+    validateUserRegistrationPayload, 
+    userRegistrationSchema
+} = require('../utils/validators/AuthValidators');
+const ApplicationErrors = require('../utils/errors/error_handlers');
+const StreamBoxResponse = require('../utils/response_handler');
+
 
 class AuthController {
     
@@ -6,20 +13,20 @@ class AuthController {
         this.AuthService = AuthService;
     }
 
-    async register(req, res) {
+    async register(req, res, next) {
         try {
             const userData = req.body;
             const validation = validateUserRegistrationPayload(userData);
 
             if (!validation.isValid) {
-                return res.status(400).json({ errors: validation.errors });
+                throw new ApplicationErrors.ValidationError('Invalid registration data', validation.errors);
             }
 
             const result = await this.AuthService.register(validation.data);
 
-            return res.status(201).json(result);
+            return StreamBoxResponse.created(res, result, 'User registered successfully');
         } catch (error) {
-            return res.status(500 ).json({ error: error.message });
+            next(error);
         }
     }
 }

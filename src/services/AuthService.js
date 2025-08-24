@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const UserRepository = require('../repositories/UserRepository');
 const JWTHandler = require('../configs/jwt');
-
+const ApplicationErrors = require('../utils/errors/error_handlers');
 
 class AuthService {
     constructor() {
@@ -27,7 +27,7 @@ class AuthService {
         // check if user exists 
         const existingUser = await UserRepository.findByEmail(email);
         if (existingUser) {
-            throw new Error('User already exists');
+            throw new ApplicationErrors.ConflictError('User already exists');
         }
 
         // hash password for db saving
@@ -66,4 +66,5 @@ class AuthService {
         return sanitizedUser;
     }
 }
+
 export default new AuthService();
