@@ -1,8 +1,4 @@
-import { use } from 'react';
-
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
 const UserRepository = require('../repositories/UserRepository');
 const JWTHandler = require('../configs/jwt');
 const ApplicationErrors = require('../utils/errors/error_handlers');
@@ -67,4 +63,4 @@ class AuthService {
     }
 }
 
-export default new AuthService();
+module.exports = new AuthService();

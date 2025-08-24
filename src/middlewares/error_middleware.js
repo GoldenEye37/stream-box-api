@@ -1,4 +1,4 @@
-const AppErrors = require('src/utils/errors/error_handlers');
+const AppErrors = require('../utils/errors/error_handlers');
 
 const errorHandler = (error, req, res, next) => {
     let err = {...error};
