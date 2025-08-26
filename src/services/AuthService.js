@@ -59,6 +59,47 @@ class AuthService {
         };
     }
 
+
+    async login(login_payload) {
+        const {
+            email, 
+            password
+        } = login_payload
+
+        // check if user exists 
+        const user = await UserRepository.findByEmail(email);
+        if (!user) {
+            throw new ApplicationErrors.UnauthorizedError('Invalid email or password');
+        }
+
+        // validate password
+        const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+        if (!isPasswordValid) {
+            throw new ApplicationErrors.UnauthorizedError('Invalid email or password');
+        }
+
+        // generate tokens
+        const userTokens = this.jwtHandler.generateTokens({
+            userId: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+        });
+
+        // update last login
+        await UserRepository.updateLastLogin(user.id);
+
+        // return user and tokens
+        return {
+            user: this.sanitizeUser(user),
+            tokens: {
+                ...userTokens,
+            },
+        };
+    }
+
+    
+
     sanitizeUser(user){
         const { passwordHash, ...sanitizedUser } = user;
         return sanitizedUser;

@@ -1,4 +1,5 @@
 const Joi = require('joi');
+const { functions } = require('lodash');
 
 /**
  * *************************************************************************************
@@ -104,6 +105,24 @@ const userRegistrationSchema = Joi.object({
 });
 
 
+const userLoginSchema = Joi.object({
+  email: Joi.string()
+    .email({ minDomainSegments: 2 })
+    .required()
+    .messages({
+      'string.email': 'Please provide a valid email address',
+      'any.required': 'Email is required'
+    }),
+
+  password: Joi.string()
+    .min(8)
+    .required()
+    .messages({
+      'string.min': 'Password must be at least 8 characters long',
+      'any.required': 'Password is required'
+    })
+});
+
 /**
  * *************************************************************************************
  *                                         Validators
@@ -136,8 +155,35 @@ function validateUserRegistrationPayload(userData) {
   };
 }
 
+function validateUserLoginPayload(loginData) {
+    const { error, value } = userLoginSchema.validate(loginData, {
+        abortEarly: false,
+        stripUnknown: true,
+    });
+
+    if (error) {
+        const errorMessages = error.details.map(detail => ({
+            field: detail.path.join('.'),
+            message: detail.message
+        }));
+
+        return {
+            isValid: false,
+            errors: errorMessages,
+            data: null
+        };
+    }
+
+    return {
+        isValid: true,
+        errors: [],
+        data: value
+    };
+}
 
 module.exports = {
     validateUserRegistrationPayload, 
-    userRegistrationSchema
+    validateUserLoginPayload,
+    userRegistrationSchema,
+    userLoginSchema
 };

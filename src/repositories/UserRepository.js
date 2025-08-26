@@ -84,6 +84,13 @@ class UserRepository extends BaseRepository {
             }
         });
     }
+
+    async updateLastLogin(user_id) {
+        return this.model.update({
+            where: { id: user_id },
+            data: { lastLogin: new Date() }
+        });
+    }
 }
 
 module.exports = new UserRepository();

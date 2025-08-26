@@ -1,7 +1,8 @@
 const AuthService = require('../services/AuthService');
 const {
     validateUserRegistrationPayload, 
-    userRegistrationSchema
+    userRegistrationSchema,
+    validateUserLoginPayload,
 } = require('../utils/validators/AuthValidators');
 const ApplicationErrors = require('../utils/errors/error_handlers');
 const StreamBoxResponse = require('../utils/response_handler');
@@ -26,6 +27,28 @@ class AuthController {
             const result = await AuthService.register(validation.data);
 
             return StreamBoxResponse.created(res, result, 'User registered successfully');
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async login(req, res, next) {
+        try {
+            const loginData = req.body;
+
+            if (!loginData) {
+                throw new ApplicationErrors.ValidationError('No data provided for login');
+            }
+
+            // validate login data
+            const validation = validateUserLoginPayload(loginData);
+            if (!validation.isValid) {
+                throw new ApplicationErrors.ValidationError('Invalid login data', validation.errors);
+            }
+
+            const result = await AuthService.login(loginData);
+
+            return StreamBoxResponse.ok(res, result, 'User logged in successfully');
         } catch (error) {
             next(error);
         }
