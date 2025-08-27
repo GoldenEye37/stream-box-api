@@ -98,7 +98,27 @@ class AuthService {
         };
     }
 
-    
+    async refresh_user_token(refresh_token) {
+        // Verify and refresh the token
+        const {valid, decoded, expired, error} = this.jwtHandler.validateRefreshToken(refresh_token);
+
+        if (!valid) {
+            const error_message = error || 'Invalid refresh token';
+            throw new ApplicationErrors.UnauthorizedError(error_message);
+        }
+
+        const userData = decoded;
+
+        // Generate new tokens
+        const accessToken = this.jwtHandler.generateAccessToken({
+            ...userData
+        });
+
+        // return new access token
+        return {
+            accessToken
+        };
+    }
 
     sanitizeUser(user){
         const { passwordHash, ...sanitizedUser } = user;

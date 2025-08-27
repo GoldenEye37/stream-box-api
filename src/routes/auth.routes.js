@@ -43,6 +43,16 @@ router.post(
     AuthController.login
 );
 
+/**
+ *  @route   POST /api/v1/auth/refresh-token
+ *  @desc   Refresh user access token
+ *  @access  Public
+ */
+router.post(
+    '/refresh-token',
+    AuthController.refreshToken
+);
+
 module.exports = router;
 
 

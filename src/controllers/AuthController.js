@@ -1,4 +1,5 @@
 const AuthService = require('../services/AuthService');
+const JwtHandler = require('../configs/jwt');
 const {
     validateUserRegistrationPayload, 
     userRegistrationSchema,
@@ -49,6 +50,25 @@ class AuthController {
             const result = await AuthService.login(loginData);
 
             return StreamBoxResponse.ok(res, result, 'User logged in successfully');
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async refreshToken(req, res, next) {
+        try {
+            // extract refresh token from headers 
+            // auth header 
+            const authHeader = req.headers.authorization;
+            const refreshToken = JwtHandler.extractTokenFromHeader(authHeader);
+
+            if (!refreshToken) {
+                throw new ApplicationErrors.ValidationError('Invalid refresh token passed!');
+            }
+
+            const result = await AuthService.refresh_user_token(refreshToken);
+
+            return StreamBoxResponse.ok(res, result, 'Token refreshed successfully');
         } catch (error) {
             next(error);
         }
