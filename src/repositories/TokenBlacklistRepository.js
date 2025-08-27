@@ -11,6 +11,11 @@ class TokenBlacklistRepository{
         try{
             const decoded = this.jwtHandler.decodeToken(token);
 
+            // check if token is accessToken
+            if (decoded.type !== 'access') {
+                throw new ApplicationErrors.TokenError('Invalid token type, pass access token for blacklisting');
+            }
+
             if (!decoded) {
                 throw new ApplicationErrors.TokenError('Invalid token');
             }
@@ -71,3 +76,5 @@ class TokenBlacklistRepository{
         }
     }
 }
+
+module.exports = new TokenBlacklistRepository();
