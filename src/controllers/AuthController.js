@@ -27,7 +27,9 @@ class AuthController {
 
             const result = await AuthService.register(validation.data);
 
-            return StreamBoxResponse.created(res, result, 'User registered successfully');
+            return StreamBoxResponse.created(
+                res, result, 'User registered successfully'
+            );
         } catch (error) {
             next(error);
         }
@@ -49,7 +51,32 @@ class AuthController {
 
             const result = await AuthService.login(loginData);
 
-            return StreamBoxResponse.ok(res, result, 'User logged in successfully');
+            return StreamBoxResponse.success(
+                res, result, 'User logged in successfully'
+            );
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async logout(req, res, next) {
+        try {
+            const { userId, jti } = req.user;
+            const authHeader = req.headers.authorization;
+            const accessToken = jwtConfig.extractTokenFromHeader(authHeader);
+
+            // Get refresh token from body or extract from session
+            const { refreshToken } = req.body;
+
+            const result = await AuthService.logout(
+                accessToken,
+                refreshToken,
+                userId
+            );
+
+            return StreamBoxResponse.success(
+                res, result, 'Logged out successfully'
+            );
         } catch (error) {
             next(error);
         }
@@ -68,7 +95,9 @@ class AuthController {
 
             const result = await AuthService.refresh_user_token(refreshToken);
 
-            return StreamBoxResponse.ok(res, result, 'Token refreshed successfully');
+            return StreamBoxResponse.success(
+                res, result, 'Token refreshed successfully'
+            );
         } catch (error) {
             next(error);
         }
