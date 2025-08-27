@@ -152,6 +152,15 @@ class JWTHandler{
             return null;
         }
     }
+
+    decodeToken(token) {
+        try {
+            const decoded = jwt.decode(token, { complete: true });
+            return decoded;
+        } catch (error) {
+            return null;
+        }
+    }
 }
 
 module.exports = new JWTHandler();
