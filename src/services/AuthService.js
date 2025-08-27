@@ -1,5 +1,9 @@
 const bcrypt = require('bcryptjs');
+
 const UserRepository = require('../repositories/UserRepository');
+const UserSessionRepository = require('../repositories/UserSessionRepository');
+const TokenBlacklistRepository = require('../repositories/TokenBlackListRepository');
+
 const JWTHandler = require('../configs/jwt');
 const ApplicationErrors = require('../utils/errors/error_handlers');
 
@@ -41,26 +45,15 @@ class AuthService {
             age: parseInt(age),
         }, preferredGenres);
 
-        // generate tokens 
-        const userTokens = this.jwtHandler.generateTokens({
-            userId: user.id,
-            email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName,
-        });
-
 
         // return tokens
         return {
-            user: this.sanitizeUser(user),
-            tokens: {
-                ...userTokens,
-            },
+            user: this.sanitizeUser(user)
         };
     }
 
 
-    async login(login_payload) {
+    async login(login_payload, deviceInfo = {}) {
         const {
             email, 
             password
@@ -89,13 +82,49 @@ class AuthService {
         // update last login
         await UserRepository.updateLastLogin(user.id);
 
+        // generate userSession
+        const session = await UserSessionRepository.createSession(
+            user.id, 
+            userTokens.refreshToken, 
+            deviceInfo, 
+            deviceInfo.ipAddress || null
+        );
+
         // return user and tokens
         return {
             user: this.sanitizeUser(user),
             tokens: {
                 ...userTokens,
             },
+            session: {
+                id: session.id,
+                deviceInfo: session.deviceInfo
+            }
         };
+    }
+
+    async logout(accessToken, refreshToken, userId) {
+        try {
+            // Blacklist Access Token 
+            if (accessToken) {
+                await TokenBlacklistRepository.blacklistToken(accessToken, userId);
+            }
+
+            // Revoke the refresh token
+            if (refreshToken) {
+                const session = await UserSessionService.findSessionByRefreshToken(refreshToken);
+                if (session) {
+                    await UserSessionService.revokeSession(session.id, userId);
+                }
+            }
+
+            return {
+                message: 'User logged out successfully', 
+                loggedOutAt: new Date()
+            };
+        } catch (error) {
+            throw new ApplicationErrors.InternalServerError('Failed to logout user', [error.message]);
+        }
     }
 
     async refresh_user_token(refresh_token) {

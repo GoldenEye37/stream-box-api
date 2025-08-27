@@ -91,6 +91,16 @@ class UserRepository extends BaseRepository {
             data: { lastLogin: new Date() }
         });
     }
+
+    async removeTokens(userId) {
+        return this.model.update({
+            where: { id: userId },
+            data: {
+                accessToken: null,
+                refreshToken: null
+            }
+        });
+    }
 }
 
 module.exports = new UserRepository();
