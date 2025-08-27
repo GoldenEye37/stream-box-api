@@ -30,7 +30,7 @@ model User {
   preferredGenres          Json?           @map("preferred_genres")
   createdAt                DateTime        @default(now()) @map("created_at")
   updatedAt                DateTime        @updatedAt @map("updated_at")
-  lastLogin                DateTime        @lastLogin @map("last_login")
+  lastLogin                DateTime?       @map("last_login")
 
   // Relations
   rentals                  Rental[]
@@ -38,9 +38,41 @@ model User {
   reviews                  Review[]
   sharedMovies             MovieShare[]    @relation("SharedBy")
   receivedShares           MovieShare[]    @relation("SharedWith")
+  sessions                 UserSession[]
+  blacklistedTokens        TokenBlacklist[]
 
   @@unique([oauthProvider, oauthId])
   @@map("users")
+}
+
+model UserSession {
+  id              String    @id @default(cuid())
+  userId          String
+  refreshTokenHash String
+  deviceInfo      Json?
+  ipAddress       String?
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  lastActivityAt  DateTime  @default(now())
+  revokedAt       DateTime?
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_sessions") 
+}
+
+model TokenBlacklist {
+  id        String   @id @default(cuid())
+  jti       String   @unique
+  userId    String
+  token     String   // Partial token for identification
+  reason    String   @default("logout")
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("token_blacklist")
 }
 
 model Genre {
