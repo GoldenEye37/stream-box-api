@@ -49,8 +49,7 @@ class JWTHandler{
     // Generate refresh token 
     generateRefreshToken (payload) {
         const tokenPayload = {
-            userId: payload.userId,
-            email: payload.email,
+            ...payload,
             type: 'refresh',
             iat: Math.floor(Date.now() / 1000), // issued at
             jti: crypto.randomUUID() // JWT ID
