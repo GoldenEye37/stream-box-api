@@ -44,6 +44,16 @@ router.post(
 );
 
 /**
+ *  @route   POST /api/v1/auth/logout
+ *  @desc    Logout a user
+ *  @access  Public
+ */
+router.post(
+    '/logout',
+    AuthController.logout
+);
+
+/**
  *  @route   POST /api/v1/auth/refresh-token
  *  @desc   Refresh user access token
  *  @access  Public
